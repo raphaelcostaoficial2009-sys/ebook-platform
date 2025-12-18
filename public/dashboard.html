@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>📤 Enviar E-book</h1>
+    <nav>
+      <a href="/">Ver biblioteca</a>
+      <a href="/logout">Sair</a>
+    </nav>
+  </header>
+
+  <main class="dashboard">
+    <form method="POST" action="/upload" enctype="multipart/form-data">
+      <input type="text" name="titulo" placeholder="Título do e-book" required>
+      <input type="file" name="pdf" accept="application/pdf" required>
+      <button type="submit">Enviar PDF</button>
+    </form>
+  </main>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
