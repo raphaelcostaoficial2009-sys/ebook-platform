@@ -1,7 +1,6 @@
 {
   "name": "ebook-platform",
   "version": "1.0.0",
-  "description": "Plataforma de e-books com login e área admin",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -11,6 +10,5 @@
     "express": "^4.19.2",
     "express-session": "^1.17.3",
     "multer": "1.4.5-lts.1"
-
   }
 }
