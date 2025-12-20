@@ -3,11 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <h1>Bem-vindo 🔥</h1>
-  <p>Você está logado.</p>
+  <header>
+    <h1>📤 Área de Upload</h1>
+    <a href="/logout">Sair</a>
+  </header>
+
+  <form action="/upload" method="POST" enctype="multipart/form-data">
+    <input type="text" name="titulo" placeholder="Título do e-book" required>
+    <input type="text" name="autor" placeholder="Autor" required>
+    <input type="file" name="arquivo" accept=".pdf" required>
+    <button type="submit">Enviar eBook</button>
+  </form>
+
+  <hr>
+
+  <h2>📚 E-books enviados</h2>
+  <div id="ebooks"></div>
+
+  <script src="admin.js"></script>
 
 </body>
 </html>
