@@ -1,53 +1,99 @@
+// ==================================================
+// IMPORTS
+// ==================================================
 const express = require("express");
 const session = require("express-session");
 const bcrypt = require("bcrypt");
 const fs = require("fs");
 const path = require("path");
 
+// ==================================================
+// APP CONFIG
+// ==================================================
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ===== MIDDLEWARES =====
+// ==================================================
+// MIDDLEWARES
+// ==================================================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Arquivos estáticos
 app.use(express.static(path.join(__dirname, "public")));
 
+// Sessão
 app.use(
   session({
-    secret: "segredo-muito-foda",
+    secret: process.env.SESSION_SECRET || "segredo-muito-foda",
     resave: false,
     saveUninitialized: false,
+    cookie: { secure: false }, // Render usa HTTP
   })
 );
 
-// ===== ARQUIVO DE USUÁRIOS =====
+// ==================================================
+// ARQUIVO DE USUÁRIOS
+// ==================================================
 const USERS_FILE = path.join(__dirname, "users.json");
 
 function loadUsers() {
-  if (!fs.existsSync(USERS_FILE)) return [];
-  return JSON.parse(fs.readFileSync(USERS_FILE));
+  if (!fs.existsSync(USERS_FILE)) {
+    fs.writeFileSync(USERS_FILE, "[]");
+    return [];
+  }
+
+  const data = fs.readFileSync(USERS_FILE, "utf-8").trim();
+  if (!data) return [];
+
+  try {
+    return JSON.parse(data);
+  } catch (err) {
+    console.error("users.json corrompido, resetando...");
+    fs.writeFileSync(USERS_FILE, "[]");
+    return [];
+  }
 }
 
 function saveUsers(users) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
-// ===== ROTAS HTML =====
+// ==================================================
+// MIDDLEWARE DE AUTENTICAÇÃO
+// ==================================================
+function auth(req, res, next) {
+  if (!req.session.user) {
+    return res.redirect("/login.html");
+  }
+  next();
+}
+
+// ==================================================
+// ROTAS HTML
+// ==================================================
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
+  res.redirect("/login.html");
 });
 
 app.get("/register", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "register.html"));
 });
 
-// ===== CADASTRO =====
+app.get("/dashboard", auth, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+});
+
+// ==================================================
+// AUTH
+// ==================================================
+
+// Cadastro
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
   const users = loadUsers();
 
-  const exists = users.find((u) => u.username === username);
-  if (exists) {
+  if (users.find((u) => u.username === username)) {
     return res.send("Usuário já existe");
   }
 
@@ -58,7 +104,7 @@ app.post("/register", async (req, res) => {
   res.redirect("/login.html");
 });
 
-// ===== LOGIN =====
+// Login
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const users = loadUsers();
@@ -73,19 +119,16 @@ app.post("/login", async (req, res) => {
   res.redirect("/dashboard.html");
 });
 
-// ===== PROTEÇÃO =====
-function auth(req, res, next) {
-  if (!req.session.user) {
-    return res.redirect("/login.html");
-  }
-  next();
-}
-
-app.get("/dashboard", auth, (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+// Logout
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/login.html");
+  });
 });
 
-// ===== START =====
+// ==================================================
+// START SERVER
+// ==================================================
 app.listen(PORT, () => {
-  console.log("Servidor rodando na porta " + PORT);
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
